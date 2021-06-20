@@ -1,0 +1,55 @@
+<html>
+    <head></head>
+    <body>
+        <h1>Functionsとやりとりを行うパターン</h1>
+        <div>
+            <input id="userName" placeholder="ユーザー名" />
+            <button id="login">ログイン</button>
+        </div>
+        <div>
+            <input id="message" placeholder="SendMessage"/>
+            <button id="sendMessage">メッセージ送信</button>
+        </div>
+        <div>
+            <textarea id="res"></textarea>
+        </div>
+        <script>
+            const editTextarea = (message) => {
+                const date = new Date();
+                const el = document.getElementById("res");
+                res.value = `${res.value}\n[${date.toISOString()}]:${message}`;
+            }
+            // ---------------------------------------------------------------------------
+            let socketUrl = '';
+            let ws;
+            let userName = '';
+            const loginButton = document.getElementById("login");
+            loginButton.onclick = () => {
+                userName = document.getElementById("userName").value;
+                fetch(`http://localhost:7071/api/login?userid=${userName}`).then(res => {
+                    return res.json();
+                }).then(res => {
+                    socketUrl = res.url;
+                    ws = new WebSocket(socketUrl);
+                    ws.onopen = () => {
+                        editTextarea("connection open")
+                    }
+                    ws.onmessage = (message) => {
+                        console.log(message)
+                    }
+                });
+            }
+            // ---------------------------------------------------------------------------
+            const smButton = document.getElementById("sendMessage");
+            smButton.onclick = () => {
+                console.log('run')
+                const message = document.getElementById("message").value;
+                const senMessage = {
+                    from: userName,
+                    content: message
+                };
+                ws.send(JSON.stringify(senMessage));
+            }
+        </script>
+    </body>
+</html>

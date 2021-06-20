@@ -1,0 +1,71 @@
+<html>
+    <head></head>
+    <body>
+        <h1>単純なパターン(SampleHub)</h1>
+        <div>
+            <button id="request">接続要求&WebSocketConnect</button>
+        </div>
+        <div>
+            <input id="groupName" placeholder="Group名" />
+            <button id="genGroup">グループ作成</button>
+        </div>
+        <div>
+            <input id="groupMessage" placeholder="Group宛メッセージ" />
+            <button id="sendGroup">メッセージ送信</button>
+        </div>
+        <div>
+            <textarea id="res"></textarea>
+        </div>
+        <script>
+            const req = document.getElementById("request");
+            let ws;
+            const editTextarea = (message) => {
+                const date = new Date();
+                const el = document.getElementById("res");
+                res.value = `${res.value}\n[${date.toISOString()}]:${message}`;
+            }
+            req.onclick = () => {
+                fetch("http://localhost:7071/api/ConnectionRequest").then(res => res.text()).then(res => {
+                    console.log(res)
+                    ws = new WebSocket(res, "json.webpubsub.azure.v1");
+                    ws.onopen = (wres) => {
+                        console.log(wres)
+                        editTextarea("connection open")
+                    }
+                    ws.onmessage = (event) => {
+                        console.log(event)
+                        const res = JSON.stringify(event.data);
+                        editTextarea(res);
+                    }
+                });
+            };
+            //////////////////////////////////////////////////////////////
+            const genGroup = document.getElementById("genGroup");
+            let saveGroupName = "";
+            genGroup.onclick = () => {
+                const el = document.getElementById("groupName");
+                const groupName = el.value;
+                const message = {
+                    type: "joinGroup",
+                    group: groupName
+                };
+                console.log(JSON.stringify(message))
+                ws.send(JSON.stringify(message));
+                saveGroupName = groupName;
+            };
+            //////////////////////////////////////////////////////////////
+            const sendGroup = document.getElementById("sendGroup");
+            sendGroup.onclick = () => {
+                const el = document.getElementById("groupMessage");
+                const groupMessage = el.value;
+                const message = {
+                    type: "sendToGroup",
+                    group: saveGroupName,
+                    dataType : "text",
+                    data: groupMessage
+                };
+                ws.send(JSON.stringify(message));
+            };
+        </script>
+    </body>
+</html>
