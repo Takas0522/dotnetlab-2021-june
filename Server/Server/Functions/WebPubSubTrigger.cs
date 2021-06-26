@@ -31,10 +31,6 @@ namespace Server.Functions
         )
         {
             log.LogInformation($"Received client connect with connectionId: {connectionContext.ConnectionId}");
-            if (connectionContext.UserId == "attacker")
-            {
-                return new ErrorResponse(WebPubSubErrorCode.Unauthorized);
-            }
             return new ConnectResponse
             {
                 UserId = connectionContext.UserId
@@ -47,12 +43,6 @@ namespace Server.Functions
             [WebPubSub] IAsyncCollector<WebPubSubOperation> operations
         )
         {
-            await operations.AddAsync(new SendToAll
-            {
-                Message = BinaryData.FromString(new ClientContent($"{connectionContext.UserId} connected.").ToString()),
-                DataType = MessageDataType.Json
-            });
-
             await operations.AddAsync(new AddUserToGroup
             {
                 UserId = connectionContext.UserId,
